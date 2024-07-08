@@ -21,6 +21,7 @@ import threading
 # Debug mode output is allowed - not for production usage
 DEBUG      = False
 DEBUG_AUTH = False
+IS_HASH_TAG = True
 INFO       = True
 
 # Exit codes
@@ -381,6 +382,7 @@ parser.add_argument('--days', '-d', type=int, default=30, help='How recent image
 parser.add_argument('--require-scan', '-s', type=bool, nargs='?', default=False, const=True, help='Clone only scanned images (default False)')
 parser.add_argument('--verbose', '-v', type=bool, nargs='?', default=False, const=True, help='More verbosity (default False)')
 parser.add_argument('--verbose-auth', '-vv', type=bool, nargs='?', default=False, const=True, help='Verbose authentication data (default False)')
+parser.add_argument('--skip-hash-tag', '-sht', type=bool, nargs='?', default=False, const=True, help='Skip Hash Tag')
 # Mutually exclusive arguments --exclude-repos and --include-repos
 bwListGroup = parser.add_mutually_exclusive_group()
 bwListGroup.add_argument('--exclude-repos', type=str, nargs='?', help='Comma-separated list of repositories to exclude from cloning ("black list")')
@@ -406,6 +408,9 @@ if args.verbose_auth:
   DEBUG = True
   DEBUG_AUTH = True
 
+if args.skip_hash_tag:
+  IS_HASH_TAG = False
+  print('skip hash tag is enabled...')
   
 debug('')
 
@@ -429,7 +434,7 @@ if args.exclude_repos:
   # No need to try-catch here, as it would convert any bad syntax to a string
   repoListExclude = args.exclude_repos.split(',')
   for repoExclude in repoListExclude:
-    validate(repoExclude, "^[a-zA-Z0-9\-\_]+$", 'Invalid repository name: ' + repoExclude, errInvalidArgument)
+    validate(repoExclude, "^[a-zA-Z0-9\-\_\/]+$", 'Invalid repository name: ' + repoExclude, errInvalidArgument)
     for index,repo in enumerate(repoListSrc):
       if repo['repositoryName'] == repoExclude:
         debug('Repository ' + repoExclude + ' was excluded from cloning')
@@ -441,7 +446,7 @@ if args.include_repos:
   # No need to try-catch here, as it would convert any bad syntax to a string
   repoListInclude = args.include_repos.split(',')
   for repoInclude in repoListInclude:
-    validate(repoInclude, "^[a-zA-Z0-9\-\_]+$", 'Invalid repository name: ' + repoInclude, errInvalidArgument)
+    validate(repoInclude, "^[a-zA-Z0-9\-\_\/]+$", 'Invalid repository name: ' + repoInclude, errInvalidArgument)
     for index,repo in enumerate(repoListSrc):
       if repo['repositoryName'] == repoInclude:
         debug('Repository ' + repo['repositoryName'] + ' is included to cloning')
@@ -468,8 +473,14 @@ for repo in repoListSrc:
         info('  Found image: ' + image['repositoryName'] + ':' + image['imagePushedAt'])
         info('    Image is not tagged, skipping')
         continue
-        
-      info('  Found image: ' + image['repositoryName'] + ':' + tag)
+      
+      tag_pattern = r"^[a-f0-9]{40}|^[a-f0-9]{7,8}$"
+      if re.match(tag_pattern, tag) and not IS_HASH_TAG:
+        info('  Found image: ' + image['repositoryName'] + ':' + tag)
+        info('    Image is not tagged, skipping')
+        continue
+      else:
+        info('  Found image: ' + image['repositoryName'] + ':' + tag)
 
       # Is image too old to be cloned?
       age = imageAge(image)

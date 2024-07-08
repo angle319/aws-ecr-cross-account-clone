@@ -1,4 +1,7 @@
--> Version 1.03, 2022-07-22
+-> Version 1.04, 2022-07-22
++ New arguments: --skip-hash-tag to skip unnecessary hash commit.
+
+Version 1.03, 2022-07-22
 + New arguments: --include-repos and --exclude-repos for whitelisting and blacklisting repositories at the source ECR.
 
 Version 1.02, 2022-06-17

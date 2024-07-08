@@ -64,6 +64,20 @@ Your `~/.aws/credentials` file should define separate profiles for both 'source'
 
 where the values in angle brackets are your actual access credentials for corresponding AWS accounts.
 
+if you can not complete execution, please check your `~/.aws/config` file, and add src and dst like sample.
+
+    [default]
+    region = us-east-1
+    output = json
+
+    [profile src]
+    region=us-east-1
+    output=json
+
+    [profile dst]
+    region=us-east-1
+    output=json
+
 ## Syntax ##
 
 Usage:
@@ -81,22 +95,26 @@ Optional arguments:
 
     -h, --help                 Show the help message and exit
     --days DAYS, -d DAYS       How recent images to synchronize, in calendar days (default 30)
-	--include-repos WHITELIST  Comma-separated white list of repositories to synchronize
-	--exclude-repos BLACKLIST  Comma-separated black list of repositories to exclude from synchronization
+    --include-repos WHITELIST  Comma-separated white list of repositories to synchronize
+    --exclude-repos BLACKLIST  Comma-separated black list of repositories to exclude from synchronization
     --require-scan, -s         Clone only scanned images (default False)
-	--verbose, -v              More verbosity, except sensitive authentication data (default False)
-	--verbose-auth, -vv        More verbosity, including sensitive authentication data (default False)
+    --verbose, -v              More verbosity, except sensitive authentication data (default False)
+    --verbose-auth, -vv        More verbosity, including sensitive authentication data (default False)
+    --skip-hash-tag, -sht      Skip Hash Tag (default False)
 
 Example:
 
+    # simple sample
     aws-ecr-cross-account-clone.py src us-east-1 dst us-east-2 --days 14 --require-scan
+    # white list multiple repo and skip commit tag sample
+    aws-ecr-cross-account-clone.py src eu-central-1 dst us-east-1 -sht --days 2500 --include-repos myviewboard/whiteboard-mqtt,mvb/core/api/v2/community
 
 Notes about whitelisting and blacklisting:
 
--  Arguments `--include-repos` and `--exclude-repos` are mutually exclusive.
--  If either `--include-repos` or `--exclude-repos` argument refers a repository name that does not exist in source ECR, such name is ignored, and no error is arisen.
+- Arguments `--include-repos` and `--exclude-repos` are mutually exclusive.
+- If either `--include-repos` or `--exclude-repos` argument refers a repository name that does not exist in source ECR, such name is ignored, and no error is arisen.
 
 Notes about sensitive authentication data:
 
--  `--verbose` flag enables printing varios debugging information, but hides AWS authorization tokens.
--  `--verbose-auth` flag enables printing varios debugging information like `--verbose` flag does, including AWS authorization tokens.
+- `--verbose` flag enables printing varios debugging information, but hides AWS authorization tokens.
+- `--verbose-auth` flag enables printing varios debugging information like `--verbose` flag does, including AWS authorization tokens.
