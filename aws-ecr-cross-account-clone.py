@@ -683,7 +683,7 @@ class pushPullThread(threading.Thread):
     global imagesPushed
     debug('Starting thread: ' + self.name)
     dockerPull(fqdnSrc + '/' + self.imageName)
-    dockerTag(self.imageName, fqdnDst + '/' + self.imageName)
+    dockerTag(fqdnSrc + '/' + self.imageName, fqdnDst + '/' + self.imageName)
     dockerPush(fqdnDst + '/' + self.imageName)
     imagesPushed = imagesPushed + 1
     imageNamesPushed.append(self.imageName)
