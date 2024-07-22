@@ -353,10 +353,13 @@ def describeImage(profile, region, repositoryName, tag):
   # Convert JSON text to a list
   images = json.loads(stdout)['imageDetails']
   for image in images:
-    if image['imageTags'][0] == tag:
-      debug('Found the image:')
-      debug(image)
-      return image
+    if 'imageTags' in image:
+      for image_tag in image['imageTags']:
+        info(image_tag)
+        if image_tag == tag:
+          debug('Found the image:')
+          debug(image)
+          return image
   
   # If such image is not found
   return {}
@@ -648,8 +651,9 @@ imagesToSyncFinal = []
 for srcImage in imagesToSync:
   shouldBeCopied = False
   # Checking if sush image exists at destination
-  info('Checking if the image ' + srcImage['repositoryName'] + ':' + srcImage['imageTags'][0] + ' exists at destination and has same checksum')
-  dstImage = describeImage(args.dst_profile, args.dst_region, srcImage['repositoryName'], srcImage['imageTags'][0])
+  for tag in srcImage['imageTags']:
+    info('Checking if the image ' + srcImage['repositoryName'] + ':' + tag + ' exists at destination and has same checksum')
+    dstImage = describeImage(args.dst_profile, args.dst_region, srcImage['repositoryName'], tag)  
   
   try:
     srcDigest = srcImage['imageDigest']
@@ -695,10 +699,11 @@ class pushPullThread(threading.Thread):
 # Defining and running threads
 threads = []
 for image in imagesToSync:
-  imageName = image['repositoryName'] + ':' + image['imageTags'][0]
-  pushPullRunner = pushPullThread('push-pull thread for image ' + imageName, imageName)
-  pushPullRunner.start()
-  threads.append(pushPullRunner)
+  for tag in image['imageTags']:
+    imageName = image['repositoryName'] + ':' + tag
+    pushPullRunner = pushPullThread('push-pull thread for image ' + imageName, imageName)
+    pushPullRunner.start()
+    threads.append(pushPullRunner)
 
 
 # Waiting for all threads to complete
